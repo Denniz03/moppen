@@ -1,0 +1,171 @@
+:root {
+    --userColor: MediumSeaGreen;
+    --userColorLight: #5BCF8B;
+    --userColorDark: #139858;
+    --padding: 10px;
+    --borderSize: 1px solid;
+    --borderColor: #eee;
+    --borderRadius: 10px;
+    --boxShadow: 2px 2px 5px #00000022;
+    
+    --successText: #3c763d;
+    --successBackground: #dff0d8;
+    --successBorder: #d6e9c6;
+    --errorText: #a94442;
+    --errorBackground: #F2DEDE;
+    --errorBorder: #ebccd1;
+    --infoText: #31708f;
+    --infoBackground: #d9edf7;
+    --infoBorder: #bce8f1;
+    --warningText: #8a6d3b;
+    --warningBackground: #fcf8e3;
+    --warningBorder: #faebcc;
+}
+* {
+    font-family: "Roboto", sans-serif;
+    font-size: 1em;
+}
+html, body {
+    margin: 0px;
+    padding: 0px;
+}
+h1 {
+    font-size: 2em;
+    font-weight: 400;
+}
+a, a * {
+    text-decoration: none; 
+    color: var(--userColor);
+}
+i + span {
+    margin-left: var(--padding);
+}
+hr {
+    margin: var(--padding); 
+    padding: 0px calc(var(--padding) * 2); 
+    border: 0.5px solid var(--borderColor);
+}
+/* Stijl voor de overlay */
+.overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: #00000044;
+    z-index: 2;
+}
+/* Stijl voor de popup */
+.popup {
+    display: none;
+    position: fixed;
+    height: auto;
+    max-height: calc(100vh - 40px);
+    top: initial;
+    left: var(--padding);
+    right: var(--padding);
+    bottom: var(--padding);
+    padding: var(--padding);
+    background: white;
+    color: black;
+    border-radius: var(--borderRadius);
+    box-shadow: var(--boxShadow);
+    z-index: 3;
+}
+.popup-title {
+    .font-size: 1.5em;
+    .font-weight: bold;
+    padding: 10px;
+}
+.popup-close-button {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    cursor: pointer;
+    width: 40px !important;
+}
+.popup-items {
+    max-height: calc(100vh - 110px);
+    overflow-y: auto; /* Maak de moppen scrollbaar */
+}
+/* Stijl voor de user popup */
+.popup .article-media, 
+.popup .article-title, 
+.popup .article-subtitle {
+    text-align: center; 
+    pointer-events: none;
+}
+.popup .article-media i {
+    padding: 0px; 
+    width: 150px; 
+    height: 150px; 
+    border: var(--borderSize) var(--borderColor);
+    margin-bottom: var(--padding);
+    border-radius: 50%; 
+    background-size: contain; 
+    background-repeat: no-repeat; 
+    background-position: center;
+}
+.popup .article-title {
+    margin-top: -20px; 
+    padding-bottom: 0px
+}
+.popup .article-subtitle {
+    margin-top: -20px;
+    margin-bottom: var(--padding);
+    opacity: 0.5;
+}
+.popup .button {
+    width: calc(100% - 10px);
+}
+.popup .article-text {
+    padding: var(--padding);
+}
+/* Stijl voor de menubalk */
+.menu-bar {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    padding: 10px;
+    background-color: var(--userColor);
+    color: white;
+}
+#menuButton {
+    margin-right: auto !important;
+}
+/* Stijl voor de knoppen */
+.button {
+    padding: var(--padding);
+    background-color: var(--userColor);
+    border-radius: var(--borderRadius);
+    border: none;
+    cursor: pointer;
+    margin: 5px;
+}
+.button,
+.button i {
+    color: white;
+}
+.button:hover {
+    background: var(--userColorDark);
+}
+/* Stijl voor het artikel en de knoppen */
+.article {
+    padding: 20px;
+    margin: 20px;
+    border: none;
+}
+/* Stijl voor de statusbalk */
+.status-bar {
+    position: absolute;
+    bottom: 0px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px;
+    background-color: var(--userColor);
+    color: white;
+    width: calc(100% - 20px);
+    z-index: 1;
+}
