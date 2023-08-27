@@ -8,6 +8,8 @@
         $userColor = '#FF6347';
         $userColorLight = '#FF7F5F';
         $userColorDark = '#DF472F';
+        $userFavorites = 'maxFavorites';
+        $userHistory = "maxHistory";
     } else if ($user == 'noa') {
         $userImage = 'NoaPoa2017';
         $userName = 'Noa Korghout';
@@ -15,6 +17,8 @@
         $userColor = '#EE82EE';
         $userColorLight = '#FF9EFF';
         $userColorDark = '#D167D2';
+        $userFavorites = 'noaFavorites';
+        $userHistory = "noaHistory";
     } else if ($user == 'danny') {
         $userImage = 'Denniz03';
         $userName = 'Danny Korghout';
@@ -22,6 +26,8 @@
         $userColor = '#FFA500';
         $userColorLight = '#FFC031';
         $userColorDark = '#DF8B00';
+        $userFavorites = 'dannyFavorites';
+        $userHistory = "dannyHistory";
     } else {
         $userImage = 'anonymous';
         $userName = 'Onbekend';
@@ -29,6 +35,8 @@
         $userColor = '#3CB371';
         $userColorLight = '#5BCF8B';
         $userColorDark = '#139858';
+        $userFavorites = 'anonymousFavorites';
+        $userHistory = "anonymousHistory";
     }
 ?>
 <html lang="en">
@@ -74,6 +82,9 @@
 
             // Functie om een nieuwe mop op te halen via PHP
             function fetchNewJoke() {
+                totalSeen++; // Increment totalSeen counter
+                updateStatus(); // Update status bar
+
                 $.ajax({
                     url: "get_joke.php",
                     type: "GET",
@@ -81,11 +92,13 @@
                     success: function(data) {
                         var joke = data.joke;
                         var isNSFW = data.nsfw;
+                        var jokeId = data.id;
 
-                        if (!isNSFW) {
-                            $('#jokeText').text(joke); // Vul de mop in
+                        if (!isNSFW && !isMopGezien(jokeId, '<?php echo $userHistory ?>')) {
+                            $('#jokeText').text(joke);
+                            voegMopToeAanGeschiedenis(jokeId, '<?php echo $userHistory ?>');
                         } else {
-                            $('#jokeText').text("Deze mop kan niet worden weergegeven vanwege NSFW-inhoud.");
+                            fetchNewJoke();
                         }
                     },
                     error: function(xhr, status, error) {
@@ -93,17 +106,18 @@
                     }
                 });
             }
+
             // Functie om favorieten op te slaan
             function saveFavoritesToCookie(favorites) {
                 var favoritesJSON = JSON.stringify(favorites);
-                document.cookie = 'favorites=' + encodeURIComponent(favoritesJSON) + ';path=/'; // Update de favorieten cookie
+                document.cookie = '<?php echo $userFavorites ?>' + '=' + encodeURIComponent(favoritesJSON) + ';path=/'; // Update de favorieten cookie
             }
 
             // Functie voor ophalen favorieten
             function loadFavoritesFromCookie() {
                 var decodedFavorites = decodeURIComponent(document.cookie)
                     .split(';')
-                    .find(cookie => cookie.trim().startsWith('favorites='));
+                    .find(cookie => cookie.trim().startsWith('<?php echo $userFavorites ?>='));
                 
                 if (decodedFavorites) {
                     var favoritesJSON = decodedFavorites.split('=')[1];
@@ -122,12 +136,12 @@
                     favorites.forEach(function(favorite, index) {
                         var favoriteItem = document.createElement('div');
                         favoriteItem.classList.add('popup-item');
-                        
+
                         var jokeText = document.createElement('div');
                         jokeText.classList.add('article-text');
                         jokeText.textContent = favorite;
                         favoriteItem.appendChild(jokeText);
-                        
+
                         var removeButton = document.createElement('button');
                         removeButton.classList.add('button', 'favorite-remove');
                         removeButton.innerHTML = '<i class="fas fa-trash-alt"></i><span>Verwijder</span>';
@@ -152,24 +166,65 @@
                 }
             }
 
+            // Functie om mop-ID toe te voegen aan geschiedenis-cookie
+            function voegMopToeAanGeschiedenis($mopId) {
+                var userHistory = '<?php echo $userHistory ?>';
+                var history = loadHistoryFromCookie(userHistory);
+                history.push($mopId);
+                saveHistoryToCookie(history, userHistory);
+            }
+
+            // Functie om te controleren of een mop al gezien is
+            function isMopGezien($mopId) {
+                var userHistory = '<?php echo $userHistory ?>';
+                var history = loadHistoryFromCookie(userHistory);
+                return history.indexOf($mopId) !== -1;
+            }
+
+            // Functie om geschiedenis uit cookies te laden, met een lege array als het niet is ingesteld
+            function loadHistoryFromCookie(userHistory) {
+                var decodedHistory = decodeURIComponent(document.cookie)
+                    .split(';')
+                    .find(cookie => cookie.trim().startsWith(userHistory + '='));
+                
+                if (decodedHistory) {
+                    var historyJSON = decodedHistory.split('=')[1];
+                    return JSON.parse(historyJSON);
+                }
+
+                return [];
+            }
+
+            // Functie om geschiedenis op te slaan in cookies
+            function saveHistoryToCookie(history, userHistory) {
+                var historyJSON = JSON.stringify(history);
+                document.cookie = userHistory + '=' + encodeURIComponent(historyJSON) + ';path=/'; // Update de geschiedenis cookie
+            }
+
             // Functie om de tellers op te slaan in cookies
             function saveCountersToCookie() {
-                document.cookie = 'totalSeen=' + encodeURIComponent(totalSeen) + ';path=/';
-                document.cookie = 'totalApproved=' + encodeURIComponent(totalApproved) + ';path=/';
-                document.cookie = 'totalRejected=' + encodeURIComponent(totalRejected) + ';path=/';
+                document.cookie = '<?php echo $user ?>_totalSeen=' + encodeURIComponent(totalSeen) + ';path=/';
+                document.cookie = '<?php echo $user ?>_totalApproved=' + encodeURIComponent(totalApproved) + ';path=/';
+                document.cookie = '<?php echo $user ?>_totalRejected=' + encodeURIComponent(totalRejected) + ';path=/';
             }
 
             // Functie om de tellers uit cookies op te halen
             function loadCountersFromCookie() {
                 var counters = {};
-                document.cookie.split(';').forEach(cookie => {
+                var cookies = document.cookie.split(';');
+                cookies.forEach(cookie => {
                     var [key, value] = cookie.trim().split('=');
                     counters[key] = parseInt(value) || 0;
                 });
-                return counters;
+                
+                return {
+                    totalSeen: counters['<?php echo $user ?>_totalSeen'] || 0,
+                    totalApproved: counters['<?php echo $user ?>_totalApproved'] || 0,
+                    totalRejected: counters['<?php echo $user ?>_totalRejected'] || 0
+                };
             }
 
-            // Actie wanneer voor toevoegen aan favorieten
+            // Actie voor toevoegen aan favorieten
             favoriteButton.addEventListener('click', function() {
                 if (!isAddedToFavorites) {
                     favoriteButton.innerHTML = '<i class="fas fa-star"></i> Toegevoegd aan Favorieten';
@@ -180,13 +235,14 @@
                     var currentJoke = $('#jokeText').text();
                     favorites.push(currentJoke);
                     saveFavoritesToCookie(favorites);
+
+                    displayFavoritesInPopup();
                 }
             });
 
             // Actie wanneer erop wordt geklikt om te goedkeuren
             $('.approve-button').click(function() {
                 totalApproved++;
-                totalSeen++;
                 updateStatus();
                 saveCountersToCookie();
                 fetchNewJoke();
@@ -195,7 +251,6 @@
             // Actie wanneer erop wordt geklikt om af te keuren
             $('.reject-button').click(function() {
                 totalRejected++;
-                totalSeen++;
                 updateStatus();
                 saveCountersToCookie();
                 fetchNewJoke();
@@ -239,9 +294,13 @@
             <div class="article-title"><i class="far fa-"></i><h1><?php echo $userName ?></h1></div>
             <div class="article-subtitle"><i class="far fa-"></i><?php echo $userMail ?></div>
             <hr>
-            <button class="button account-edit-button"><i class="fas fa-user-edit"></i><span>Account gegevens</span></button>
-            <button class="button sign-out-button"><i class="fas fa-sign-out"></i><span>Afmelden</span></button>
-        </div>
+            <?php if ($userImage == "anonymous") { ?>
+                <button class="button sign-in-button"><i class="fas fa-sign-in"></i><span>Aanmelden</span></button>
+            <?php } else { ?>
+                <button class="button account-edit-button"><i class="fas fa-user-edit"></i><span>Account gegevens</span></button>
+                <button class="button sign-out-button"><i class="fas fa-sign-out"></i><span>Afmelden</span></button>
+            <?php } ?>}
+       </div>
     </div>
     
     <div class="article">
